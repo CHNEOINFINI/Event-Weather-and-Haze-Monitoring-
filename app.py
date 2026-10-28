@@ -1,5 +1,3 @@
-
-from rain_radar import render_rain_radar
 import streamlit as st
 import pandas as pd
 from datetime import timedelta
@@ -79,6 +77,10 @@ else:st.info('Regional observations unavailable. Check feed errors above.')
 
 from venue_ui import render as render_venue
 render_venue()
+
+from rain_radar import render_rain_radar
+st.divider()
+render_rain_radar()
 
 st.subheader('Historical observations')
 hist=history(show_hours)
