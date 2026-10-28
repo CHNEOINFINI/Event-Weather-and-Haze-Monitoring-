@@ -40,7 +40,8 @@ def render():
     data,errors=venue_feeds()
     for name,error in errors.items():st.warning(f'{name}: feed unavailable — {error}')
     rain=readings(data['Rainfall']) if 'Rainfall' in data else []
-    strikes=lightning_points(data['Lightning']) if 'Lightning' in data else []
+    strikes=[]  # Official public lightning endpoint currently returns 404; no strike data is fabricated.
+    st.warning('Automated lightning strike proximity is unavailable. Use the official MSS Lightning Information Service for live detection, radar and location alerts: https://www.weather.gov.sg/lightning/ . This dashboard does NOT provide a lightning all-clear.')
     st.caption('Data freshness: feed requests cached for 5 minutes. Rainfall is a station observation; lightning is an observed location, not a forecast.')
     rows=[]
     for name,lat,lon in targets:
@@ -52,7 +53,7 @@ def render():
         fresh_lightning=bool(lightning_age and min(lightning_age)<=30)
         rain_age=age_minutes(closest_rain['timestamp']) if closest_rain else None
         rain_valid=rain_age is not None and 0<=rain_age<=30
-        if 'Lightning' not in data or not fresh_lightning:
+        if not fresh_lightning:
             light_status='UNVERIFIED / STALE' # No recent strikes does not prove current feed health
         elif close_strikes:light_status=f'ALERT: {len(close_strikes)} strikes within {radius} km (30 min)'
         else:light_status='No nearby strikes in available recent observations'
@@ -71,4 +72,4 @@ def render():
     with st.expander('Feed interpretation and limitations'):
         st.write('PSI and PM2.5 remain regional, not venue-specific. Rainfall values represent a nearby station, not necessarily rainfall at the event site. Lightning point precision and API latency can vary. No future lightning-strike locations are predicted. Weather forecasts are area-level, not venue-specific nowcasts.')
         st.write('For critical event safety, confirm official lightning warnings, rain radar, site conditions, medical advice and the approved suspension/resumption protocol. No automatic cancellation or all-clear is issued.')
-    st.markdown('[Official lightning and weather warnings](https://www.weather.gov.sg/weather-lightning/) · [NEA haze](https://www.haze.gov.sg/)')
+    st.markdown('[MSS Lightning Information Service](https://www.weather.gov.sg/lightning/) · [NEA haze](https://www.haze.gov.sg/)')

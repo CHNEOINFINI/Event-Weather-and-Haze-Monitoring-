@@ -39,3 +39,8 @@ Official data.gov.sg v2 real-time endpoints: `psi`, `pm25`, `four-day-outlook`, 
 ## Tests
 
 `python -m pytest -q` (pytest must be installed in development environment).
+
+## Lightning and API rate-limit correction
+The previously used `/lightning` endpoint returned HTTP 404 in the deployed application. The dashboard no longer requests that endpoint or interprets missing strike data as safe. For lightning detection, use [MSS Lightning Information Service](https://www.weather.gov.sg/lightning/), including its location-based alerts. An official supported machine-readable lightning endpoint must be verified before re-enabling automated strike-distance calculations.
+
+API requests are spaced at least 2 seconds apart per Python process, with 429 retry/backoff. For heavier usage, obtain a data.gov.sg API key and configure `DATA_GOV_SG_API_KEY` in Streamlit secrets/environment. Per-process throttling does not coordinate multiple deployed replicas.

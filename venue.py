@@ -15,7 +15,7 @@ VENUES={
  'Marina Barrage':(1.2806,103.8703,5),
 }
 # Reference points, not surveyed site boundaries. Users may override coordinates.
-FEEDS={'Rainfall':'rainfall','Lightning':'lightning','Wind direction':'wind-direction','Wind speed':'wind-speed','2-hour forecast':'two-hr-forecast'}
+FEEDS={'Rainfall':'rainfall','Wind direction':'wind-direction','Wind speed':'wind-speed','2-hour forecast':'two-hr-forecast'}
 
 def km(lat1,lon1,lat2,lon2):
     a,b,c,d=map(math.radians,[lat1,lon1,lat2,lon2]); delta=a-c; dl=b-d

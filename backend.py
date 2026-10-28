@@ -1,5 +1,5 @@
 """Server-side NEA data.gov.sg client, validation and SQLite observation archive."""
-import os, time, sqlite3
+import os, time, sqlite3, threading
 from datetime import datetime, timedelta
 from zoneinfo import ZoneInfo
 from pathlib import Path
@@ -11,6 +11,8 @@ BASE='https://api-open.data.gov.sg/v2/real-time/api'
 REGIONS=['north','south','east','west','central']
 ENDPOINTS={'PSI':'psi','PM2.5':'pm25','4-day forecast':'four-day-outlook','24-hour forecast':'twenty-four-hr-forecast'}
 DB=Path(os.getenv('SG_HAZE_DB','observations.sqlite3'))
+_RATE_LOCK=threading.Lock()
+_LAST_REQUEST=[0.0]
 
 def now(): return datetime.now(SGT)
 def get_api_key(): return os.getenv('DATA_GOV_SG_API_KEY','').strip()
@@ -21,9 +23,13 @@ def fetch(endpoint,params=None):
     last=None
     for attempt in range(3):
         try:
+            with _RATE_LOCK:
+                wait=max(0.0, 2.0-(time.monotonic()-_LAST_REQUEST[0]))
+                if wait: time.sleep(wait)
+                _LAST_REQUEST[0]=time.monotonic()
             r=requests.get(f'{BASE}/{endpoint}',params=params,headers=headers,timeout=18)
             if r.status_code in (429,500,502,503,504) and attempt<2:
-                time.sleep(1.5*(attempt+1)); continue
+                time.sleep(min(30, float(r.headers.get('Retry-After','0') or 0) or (3*(2**attempt)))); continue
             r.raise_for_status()
             obj=r.json()
             if not isinstance(obj,dict) or not isinstance(obj.get('data'),dict):
