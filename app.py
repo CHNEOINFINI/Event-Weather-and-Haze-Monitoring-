@@ -1,3 +1,5 @@
+
+from rain_radar import render_rain_radar
 import streamlit as st
 import pandas as pd
 from datetime import timedelta
