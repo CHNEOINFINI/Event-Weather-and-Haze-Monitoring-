@@ -1,51 +1,41 @@
-# Singapore 72-hour Weather & Haze Operations Dashboard
+# Singapore Weather, Haze & Venue Monitoring v2
 
-Streamlit dashboard + server-side NEA API client + local SQLite historical observations.
+## Deploy to Streamlit Community Cloud
 
-## Run locally
+1. Extract this ZIP and upload its files to the **root** of your existing GitHub dashboard repository, replacing `app.py`, `backend.py`, `collector.py`, and `requirements.txt`, and adding `venue.py`, `venue_ui.py`, and `tests/`.
+2. In Streamlit Community Cloud, keep `app.py` as the entry point. The app will redeploy after your GitHub commit.
+3. Use **Venue & route proximity monitoring** below the regional air-quality summary. Choose an event venue, enable **Marina Bay Cluster**, or upload a `.kml`/`.kmz` route.
+4. Click **Refresh venue observations** to clear the five-minute API cache.
+5. Check official warnings independently before any operational decision.
 
-Install Python 3.10 or newer. In a terminal:
+## Local setup
 
 ```bash
 python -m venv .venv
-source .venv/bin/activate    # Windows: .venv\Scripts\activate
+source .venv/bin/activate
 pip install -r requirements.txt
 streamlit run app.py
 ```
 
-Open the local URL shown by Streamlit, typically http://localhost:8501.
+Windows activation: `.venv\\Scripts\\activate`.
 
-## Deploy on Streamlit Community Cloud
+Optional: set `DATA_GOV_SG_API_KEY` environment variable if required for your usage tier. Optional `SG_HAZE_DB` sets SQLite location.
 
-1. Put `app.py`, `backend.py`, `collector.py`, `requirements.txt` in a GitHub repository.
-2. In https://share.streamlit.io/ choose **Create app**, select the repository and `app.py`.
-3. Optionally add `DATA_GOV_SG_API_KEY` in Streamlit app **Secrets** for improved rate limits. Do **not** commit a key to GitHub.
-4. Deploy. Requests are made server-side, avoiding browser CORS restrictions.
-5. In the dashboard click **Backfill last 3 days** to populate the SQLite observation history (subject to API availability and pagination limits).
+## Sources
 
-**Hosting caveat:** Streamlit Community Cloud local SQLite storage is not durable. Use a persistent PostgreSQL database (requires adapting `connect()`), or another hosted database, and schedule `python collector.py` every 15 minutes on a continuously running server for permanent monitoring. The dashboard itself does not collect when asleep.
+Official data.gov.sg v2 real-time endpoints: `psi`, `pm25`, `four-day-outlook`, `twenty-four-hr-forecast`, `rainfall`, `lightning`, `wind-direction`, `wind-speed`, `two-hr-forecast`.
 
-## API endpoints
+## Critical limitations
 
-- PSI: `https://api-open.data.gov.sg/v2/real-time/api/psi`
-- 1-hour PM2.5: `https://api-open.data.gov.sg/v2/real-time/api/pm25`
-- 4-day weather: `https://api-open.data.gov.sg/v2/real-time/api/four-day-outlook`
-- 24-hour weather: `https://api-open.data.gov.sg/v2/real-time/api/twenty-four-hr-forecast`
+- Venue coordinates are approximate planning reference points. In particular Bayfront Event Space is an approximate marker, not a surveyed boundary. Override the coordinates for exact event footprint.
+- Regional PSI/PM2.5 cannot resolve conditions at a particular venue.
+- Rainfall is reported at stations, not at every venue; nearest-station distance is displayed.
+- Lightning feed parsing accepts location-based observations only. If the feed's schema changes, the dashboard reports unverified readings rather than inventing lightning positions. No nearby strikes does not prove the site is safe.
+- A KML/KMZ route is sampled for performance. Proximity is computed to route sample points; narrow-route exactness depends on sample density.
+- The current app does not include a guaranteed 24/7 collector, durable hosted database, official warning integration, or push alerts. SQLite on Streamlit Community Cloud may reset. `collector.py` can be scheduled externally.
+- The 72-hour weather outlook is a daily forecast, not hourly site-specific prediction. No 72-hour numeric haze or lightning forecast is fabricated.
+- Monitoring radius and last-30-minute strike screening are advisory defaults only. Follow your approved lightning protocol, official warnings and event safety plan.
 
-Official API docs: https://developers.data.gov.sg/datasets?formats=API
+## Tests
 
-## Limitations and safety
-
-- **No official numerical 72-hour haze forecast** is generated or invented. A daily four-day weather forecast provides the multi-day outlook, not hourly precision.
-- The PSI and PM2.5 feeds can update at different times; source observation timestamps are shown.
-- Alerts are illustrative internal screening prompts, **not** official event suspension/cancellation decisions. Consult SportSG, NEA, medical team, lightning and severe-weather warnings.
-- Lightning monitoring, automated notifications, event-specific location and durable cloud history are future enhancements, **not implemented**.
-- Backfill is limited to 12 pages per day per metric to avoid unbounded API calls; data may be incomplete if pagination exceeds this limit.
-
-## Troubleshooting
-
-- `429`: add an API key or lower request frequency.
-- `401/403`: check API key validity and hosting network.
-- No chart: click **Backfill last 3 days**, check API errors, and verify timestamps.
-- Missing forecast: check the API endpoint directly and confirm the latest schema.
-- To test locally: `python -m unittest discover -s tests -v`.
+`python -m pytest -q` (pytest must be installed in development environment).

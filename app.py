@@ -75,6 +75,9 @@ if regional:
     st.dataframe(pivot,use_container_width=True)
 else:st.info('Regional observations unavailable. Check feed errors above.')
 
+from venue_ui import render as render_venue
+render_venue()
+
 st.subheader('Historical observations')
 hist=history(show_hours)
 if not hist.empty:
