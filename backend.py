@@ -110,7 +110,8 @@ def save(df):
 def history(hours=72):
     cutoff=(now()-timedelta(hours=hours)).isoformat()
     with connect() as con:
-        df=pd.read_sql_query('SELECT metric,region,timestamp,value FROM observations WHERE timestamp>=? ORDER BY timestamp',(cutoff,),con)
+        cursor=con.execute('SELECT metric,region,timestamp,value FROM observations WHERE timestamp>=? ORDER BY timestamp', (cutoff,))
+        df=pd.DataFrame.from_records(cursor.fetchall(), columns=['metric','region','timestamp','value'])
     if not df.empty:df['timestamp']=pd.to_datetime(df['timestamp'],utc=True).dt.tz_convert(SGT)
     return df
 
