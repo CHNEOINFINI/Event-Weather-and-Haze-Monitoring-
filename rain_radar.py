@@ -57,7 +57,11 @@ def render_rain_radar():
             st.warning('No usable radar frames returned. Check the NEA dataset or try again later.')
             st.link_button('Official MSS rain radar', 'https://www.weather.gov.sg/weather-rain-area-50km/')
             return
-        idx = st.slider('Available radar frames', 0, len(frames)-1, len(frames)-1, key='radar_frame')
+        if len(frames) > 1:
+            idx = st.slider('Available radar frames', 0, len(frames)-1, len(frames)-1, key='radar_frame')
+        else:
+            idx = 0
+            st.info('Only one current radar frame was returned. Showing the latest image; a timeline appears when multiple frames are available.')
         stamp, url = frames[idx]
         st.write(f'Observation timestamp: **{stamp}**')
         try:
